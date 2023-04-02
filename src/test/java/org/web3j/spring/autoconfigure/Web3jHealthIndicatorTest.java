@@ -1,59 +1,52 @@
 package org.web3j.spring.autoconfigure;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
-import org.springframework.boot.actuate.health.HealthIndicator;
 import org.springframework.boot.actuate.health.Status;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.methods.response.*;
+import org.web3j.spring.actuate.Web3jHealthIndicator;
 import org.web3j.spring.autoconfigure.context.SpringApplicationTest;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
 
 import static java.util.concurrent.CompletableFuture.supplyAsync;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = SpringApplicationTest.class)
-public class Web3jHealthIndicatorTest {
-
+@SpringBootTest(classes = { Web3jAutoConfiguration.class, SpringApplicationTest.class })
+class Web3jHealthIndicatorTest {
 
     @Autowired
-    HealthIndicator web3jHealthIndicator;
+    Web3jHealthIndicator web3jHealthIndicator;
 
     @Autowired
     Web3j web3j;
 
     @Test
-    public void testHealthCheckIndicatorDown() throws Exception {
+    void testHealthCheckIndicatorDown() throws Exception {
         mockWeb3jCalls(false, null, null, null, null, null);
         Health health = web3jHealthIndicator.health();
-        assertThat(health.getStatus(), equalTo(Status.DOWN));
+        assertThat(health.getStatus()).isEqualTo(Status.DOWN);
 
     }
 
     @Test
-    public void testHealthCheckIndicatorUp() throws Exception {
-
+    void testHealthCheckIndicatorUp() throws Exception {
 
         mockWeb3jCalls(true, "23", "ClientVersion",
                 new BigInteger("120"), "protocolVersion", new BigInteger("80"));
 
-
         Health health = web3jHealthIndicator.health();
-        assertThat(health.getStatus(), equalTo(Status.UP));
-        assertThat(health.getDetails().get("netVersion"), equalTo("23"));
-        assertThat(health.getDetails().get("clientVersion"), equalTo("ClientVersion"));
-        assertThat(health.getDetails().get("blockNumber"), equalTo(new BigInteger("120")));
-        assertThat(health.getDetails().get("protocolVersion"), equalTo("protocolVersion"));
-        assertThat(health.getDetails().get("netPeerCount"), equalTo(new BigInteger("80")));
+        assertThat(health.getStatus()).isEqualTo(Status.UP);
+        assertThat(health.getDetails()).containsEntry("netVersion", "23");
+        assertThat(health.getDetails()).containsEntry("clientVersion", "ClientVersion");
+        assertThat(health.getDetails()).containsEntry("blockNumber", new BigInteger("120"));
+        assertThat(health.getDetails()).containsEntry("protocolVersion", "protocolVersion");
+        assertThat(health.getDetails()).containsEntry("netPeerCount", new BigInteger("80"));
 
     }
 

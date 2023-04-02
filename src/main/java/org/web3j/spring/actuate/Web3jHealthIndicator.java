@@ -1,7 +1,8 @@
 package org.web3j.spring.actuate;
 
-import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.health.Status;
 import org.springframework.util.Assert;
 import org.web3j.protocol.Web3j;
 
@@ -12,9 +13,9 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Health check indicator for Web3j
  */
-public class Web3jHealthIndicator extends AbstractHealthIndicator {
+public class Web3jHealthIndicator implements HealthIndicator {
 
-    private Web3j web3j;
+    private final Web3j web3j;
 
     public Web3jHealthIndicator(Web3j web3j) {
         Assert.notNull(web3j, "Web3j must not be null");
@@ -22,7 +23,12 @@ public class Web3jHealthIndicator extends AbstractHealthIndicator {
     }
 
     @Override
-    protected void doHealthCheck(Health.Builder builder) throws Exception {
+    public Health health() {
+        return web3jHealthIndicator();
+    }
+
+    private Health web3jHealthIndicator() {
+        Health.Builder builder = new Health.Builder(Status.UP);
         try {
             boolean listening = web3j.netListening().send().isListening();
             if (!listening) {
@@ -62,5 +68,7 @@ public class Web3jHealthIndicator extends AbstractHealthIndicator {
         } catch (Exception ex) {
             builder.down(ex);
         }
+
+        return builder.build();
     }
 }
